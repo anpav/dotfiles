@@ -66,8 +66,23 @@ prompt_hg() {
 	# Check if the current directory is in a Mercurial repository.
 	if [ $(hg status &>/dev/null; echo "${?}") == '0' ]; then
 
+		# Check updates availability
+		if ! [ $(hg summary | grep 'update (current)' | wc -l) == '0' ]; then
+			s+='*';
+		fi;
+
+		# Check for uncommitted changes
+		if ! [ $(hg status -mad | wc -l) == '0' ]; then
+			s+='+';
+		fi;
+
+		# Check for untracked files
+		if ! [ $(hg status -u | wc -l) == '0' ]; then
+			s+='?';
+		fi;
+
 		# Get the short symbolic ref.
-				branchName="$(hg branch 2> /dev/null)";
+		branchName="$(hg branch 2> /dev/null)";
 
 		[ -n "${s}" ] && s=" [${s}]";
 
@@ -130,7 +145,7 @@ PS1+="\[${hostStyle}\]\h"; # host
 PS1+="\[${white}\] in ";
 PS1+="\[${green}\]\w"; # working directory
 PS1+="\$(prompt_git \"${white} on ${violet}\")"; # Git repository details
-PS1+="\$(prompt_hg \"${white} on ${violet}\")"; # Git repository details
+PS1+="\$(prompt_hg \"${white} on ${violet}\")"; # Mercurial repository details
 PS1+="\n";
 PS1+="\[${white}\]\$ \[${reset}\]"; # `$` (and reset color)
 export PS1;
